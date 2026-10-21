@@ -49,7 +49,7 @@ jobs:
           mkdir -p app/src/main/java/com/example/aiappfactory
           mkdir -p app/src/main/res/values
 
-          # 1. settings.gradle
+          # 1. settings.gradle (Using ALLOW mode to prevent repository conflicts)
           cat << 'EOF' > settings.gradle
           pluginManagement {
               repositories {
@@ -59,7 +59,7 @@ jobs:
               }
           }
           dependencyResolutionManagement {
-              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositoriesMode.set(RepositoriesMode.ALLOW)
               repositories {
                   google()
                   mavenCentral()
@@ -69,7 +69,7 @@ jobs:
           include ':app'
           EOF
 
-          # 2. Root build.gradle (Using stable 7.4.2 to avoid 8/9 version clashes)
+          # 2. Root build.gradle
           cat << 'EOF' > build.gradle
           buildscript {
               repositories {
@@ -163,7 +163,6 @@ jobs:
       - name: Build APK using Gradle 7.5
         run: |
           export ANDROID_HOME=$HOME/android-sdk
-          # Download and setup Gradle 7.5 directly to prevent wrapper issues
           wget -q https://services.gradle.org/distributions/gradle-7.5-bin.zip -O gradle.zip
           unzip -q gradle.zip
           export PATH=$PWD/gradle-7.5/bin:$PATH
