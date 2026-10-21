@@ -20,24 +20,21 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Professional Android SDK & Auto-Accept Licenses
+      - name: Setup Android SDK & Accept Licenses
         run: |
-          echo "Setting up professional Android SDK environment..."
+          echo "Setting up professional Android SDK..."
           export ANDROID_HOME=$HOME/android-sdk
           mkdir -p $ANDROID_HOME
           
-          # Download Command Line Tools
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O commandlinetools.zip
           mkdir -p $ANDROID_HOME/cmdline-tools/latest
           unzip -q commandlinetools.zip
           mv cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/
           rm commandlinetools.zip
           
-          # Add to PATH
           echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
           
-          # Auto-Accept Licenses
           mkdir -p $ANDROID_HOME/licenses
           echo "24333f8a63b6825ea3c5514f83c2829b004d1fee" > $ANDROID_HOME/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a648b0" >> $ANDROID_HOME/licenses/android-sdk-license
@@ -47,7 +44,7 @@ jobs:
           export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
           sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
-      - name: Create Modern Android Project Structure
+      - name: Generate Complete Master Android Project
         run: |
           mkdir -p app/src/main/java/com/example/aiappfactory
           mkdir -p app/src/main/res/values
@@ -80,7 +77,7 @@ jobs:
           }
           EOF
 
-          # 3. App build.gradle (Using Modern Plugins Block)
+          # 3. App build.gradle
           cat << 'EOF' > app/build.gradle
           plugins {
               id 'com.android.application'
@@ -145,7 +142,7 @@ jobs:
               override fun onCreate(savedInstanceState: Bundle?) {
                   super.onCreate(savedInstanceState)
                   val textView = TextView(this)
-                  textView.text = "Welcome to AI App Factory!\nPhase 1 Successful!"
+                  textView.text = "Welcome to AI App Factory!\nMaster Factory Build Successful!"
                   textView.textSize = 22f
                   textView.setPadding(60, 120, 60, 60)
                   setContentView(textView)
@@ -153,14 +150,14 @@ jobs:
           }
           EOF
 
-      - name: Build Debug APK with Gradle Wrapper
+      - name: Initialize Gradle Wrapper & Build APK
         run: |
           export ANDROID_HOME=$HOME/android-sdk
-          gradle wrapper
+          gradle wrapper --gradle-version 8.1.1
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon
 
-      - name: Upload APK Artifact
+      - name: Upload Master APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: AI-App-Factory-APK
