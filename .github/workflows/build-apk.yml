@@ -20,12 +20,33 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          accept-android-sdk-licenses: true
-          sdk-version: '33'
-          arch: x86_64
+      - name: Setup Professional Android SDK & Auto-Accept Licenses
+        run: |
+          echo "Setting up professional Android SDK environment..."
+          export ANDROID_HOME=$HOME/android-sdk
+          mkdir -p $ANDROID_HOME
+          
+          # Download Command Line Tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O commandlinetools.zip
+          mkdir -p $ANDROID_HOME/cmdline-tools/latest
+          unzip -q commandlinetools.zip
+          mv cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/
+          rm commandlinetools.zip
+          
+          # Add to PATH
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+          
+          # Professional Auto-Accept Licenses (Pre-populating official hash keys)
+          mkdir -p $ANDROID_HOME/licenses
+          echo "24333f8a63b6825ea3c5514f83c2829b004d1fee" > $ANDROID_HOME/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af6dfcb131a648b0" >> $ANDROID_HOME/licenses/android-sdk-license
+          echo "84831b8509b261f129a16b75f0f03102d1d07c40" >> $ANDROID_HOME/licenses/android-sdk-license
+          echo "84831b8509b261f129a16b75f0f03102d1d07c40" >> $ANDROID_HOME/licenses/android-sdk-preview-license
+          
+          # Install SDK components safely without prompts
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+          sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
       - name: Create Basic Android Project Structure
         run: |
@@ -140,6 +161,7 @@ jobs:
 
       - name: Build Debug APK with Gradle Wrapper
         run: |
+          export ANDROID_HOME=$HOME/android-sdk
           gradle wrapper
           chmod +x gradlew
           ./gradlew assembleDebug
