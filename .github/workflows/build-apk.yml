@@ -20,17 +20,21 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build Android App With Pre-accepted License Keys
+      - name: Build Android App with Manual License Injection
         run: |
-          echo "Setting up Android SDK with direct License Keys..."
-          export ANDROID_HOME=$ANDROID_SDK_ROOT
+          echo "Injecting Android SDK licenses manually..."
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export ANDROID_SDK_ROOT=$ANDROID_HOME
           
-          # Forcefully insert official License Hash Keys directly into SDK
+          # Create license directory and write official hashes to bypass all prompts
           mkdir -p $ANDROID_HOME/licenses
           echo "24333f8a63b6825ea3c5514f83c2829b004d1fee" > $ANDROID_HOME/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a648b0" >> $ANDROID_HOME/licenses/android-sdk-license
           echo "84831b8509b261f129a16b75f0f03102d1d07c40" >> $ANDROID_HOME/licenses/android-sdk-license
+          echo "89335865a6b6d1e7714f31b068826553d3607062" >> $ANDROID_HOME/licenses/android-sdk-license
           echo "84831b8509b261f129a16b75f0f03102d1d07c40" > $ANDROID_HOME/licenses/android-sdk-preview-license
+
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
 
           # Generate Clean Project Files
           mkdir -p app/src/main/java/com/example/aiappfactory
