@@ -37,21 +37,19 @@ jobs:
           echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
           
-          # Professional Auto-Accept Licenses (Pre-populating official hash keys)
+          # Auto-Accept Licenses
           mkdir -p $ANDROID_HOME/licenses
           echo "24333f8a63b6825ea3c5514f83c2829b004d1fee" > $ANDROID_HOME/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a648b0" >> $ANDROID_HOME/licenses/android-sdk-license
           echo "84831b8509b261f129a16b75f0f03102d1d07c40" >> $ANDROID_HOME/licenses/android-sdk-license
           echo "84831b8509b261f129a16b75f0f03102d1d07c40" >> $ANDROID_HOME/licenses/android-sdk-preview-license
           
-          # Install SDK components safely without prompts
           export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
           sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
-      - name: Create Basic Android Project Structure
+      - name: Create Modern Android Project Structure
         run: |
           mkdir -p app/src/main/java/com/example/aiappfactory
-          mkdir -p app/src/main/res/layout
           mkdir -p app/src/main/res/values
 
           # 1. settings.gradle
@@ -76,22 +74,18 @@ jobs:
 
           # 2. Root build.gradle
           cat << 'EOF' > build.gradle
-          buildscript {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-              dependencies {
-                  classpath 'com.android.tools.build:gradle:8.1.1'
-                  classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10'
-              }
+          plugins {
+              id 'com.android.application' version '8.1.1' apply false
+              id 'org.jetbrains.kotlin.android' version '1.8.10' apply false
           }
           EOF
 
-          # 3. App build.gradle
+          # 3. App build.gradle (Using Modern Plugins Block)
           cat << 'EOF' > app/build.gradle
-          apply plugin: 'com.android.application'
-          apply plugin: 'kotlin-android'
+          plugins {
+              id 'com.android.application'
+              id 'org.jetbrains.kotlin.android'
+          }
 
           android {
               namespace 'com.example.aiappfactory'
