@@ -1,4 +1,4 @@
-name: Build Android Native APK
+name: Build Android Native APK - Master Guide
 
 on:
   push:
@@ -20,16 +20,29 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Build APK Successfully
+      - name: Master Build Pipeline
         run: |
+          echo "=============================================="
+          echo "Starting Master Android Build Pipeline..."
+          echo "=============================================="
+
+          # 1. Setup Android Environment & Clean Paths
+          export ANDROID_HOME=$ANDROID_SDK_ROOT
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+
+          # 2. Auto-accept SDK licenses to prevent interactive halting
+          yes | sdkmanager --licenses || true
+
+          # 3. Install necessary Android SDK packages safely
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
+          # 4. Generate Project Directory Structure
           mkdir -p app/src/main/java/com/example/aiappfactory
           mkdir -p app/src/main/res/values
 
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
+          # 5. Create settings.gradle
           cat << 'EOF' > settings.gradle
           pluginManagement {
               repositories {
@@ -49,6 +62,7 @@ jobs:
           include ':app'
           EOF
 
+          # 6. Create root build.gradle
           cat << 'EOF' > build.gradle
           buildscript {
               repositories {
@@ -62,6 +76,7 @@ jobs:
           }
           EOF
 
+          # 7. Create app/build.gradle
           cat << 'EOF' > app/build.gradle
           apply plugin: 'com.android.application'
           apply plugin: 'kotlin-android'
@@ -86,6 +101,7 @@ jobs:
           }
           EOF
 
+          # 8. Create AndroidManifest.xml
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <application
@@ -103,6 +119,7 @@ jobs:
           </manifest>
           EOF
 
+          # 9. Create MainActivity.kt
           cat << 'EOF' > app/src/main/java/com/example/aiappfactory/MainActivity.kt
           package com.example.aiappfactory
 
@@ -114,16 +131,20 @@ jobs:
               override fun onCreate(savedInstanceState: Bundle?) {
                   super.onCreate(savedInstanceState)
                   val tv = TextView(this)
-                  tv.text = "AI App Factory Successful!"
+                  tv.text = "AI App Factory Master Build Successful!"
                   setContentView(tv)
               }
           }
           EOF
 
+          # 10. Download and Execute Gradle 8.1.1 Build
+          echo "Downloading Gradle 8.1.1..."
           wget -q https://services.gradle.org/distributions/gradle-8.1.1-bin.zip -O gradle-8.1.1.zip
           unzip -q gradle-8.1.1.zip
           export PATH=$PWD/gradle-8.1.1/bin:$PATH
           
+          echo "Executing Gradle Build..."
+          gradle --version
           gradle assembleDebug --no-daemon
 
       - name: Upload APK Artifact
