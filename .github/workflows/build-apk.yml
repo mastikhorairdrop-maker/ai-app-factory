@@ -20,32 +20,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Standalone Android SDK Build & APK Generation
+      - name: Build Pure Gradle Project
         run: |
-          echo "Setting up standalone Android SDK..."
-          export ANDROID_HOME=$HOME/android-sdk
-          mkdir -p $ANDROID_HOME/cmdline-tools
+          echo "Starting clean build..."
           
-          # Download command line tools directly
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip -q cmdline-tools.zip
-          mkdir -p $ANDROID_HOME/cmdline-tools/latest
-          mv bin lib source.properties $ANDROID_HOME/cmdline-tools/latest/
-          rm cmdline-tools.zip
-          
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-          
-          # Accept licenses automatically
-          yes | sdkmanager --licenses || true
-          
-          # Install required build tools and platforms
-          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
-
-          # Generate Project Structure
           mkdir -p app/src/main/java/com/example/aiappfactory
           mkdir -p app/src/main/res/values
-
-          echo "sdk.dir=$ANDROID_HOME" > local.properties
 
           cat << 'EOF' > settings.gradle
           pluginManagement {
@@ -137,12 +117,10 @@ jobs:
           }
           EOF
 
-          # Download and run Gradle 8.1.1 directly
           wget -q https://services.gradle.org/distributions/gradle-8.1.1-bin.zip -O gradle-8.1.1.zip
           unzip -q gradle-8.1.1.zip
           export PATH=$PWD/gradle-8.1.1/bin:$PATH
           
-          gradle --version
           gradle assembleDebug --no-daemon
 
       - name: Upload APK Artifact
