@@ -20,15 +20,18 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK Environment
-        uses: android-actions/setup-android@v3
-
-      - name: Ultimate Fast Build
+      - name: Pure Gradle Build Without Actions
         run: |
+          echo "Setting up SDK paths..."
+          export ANDROID_HOME=$ANDROID_SDK_ROOT
+          export PATH=$ANDROID_HOME/platform-tools:$PATH
+
           rm -rf app build settings.gradle build.gradle local.properties
           
           mkdir -p app/src/main/java/com/example/aiappfactory
           mkdir -p app/src/main/res/values
+
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
 
           cat << 'EOF' > settings.gradle
           rootProject.name = "AIAppFactory"
