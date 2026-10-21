@@ -20,7 +20,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Pure Script Android Build
+      - name: Pure Script Android Build & Direct Gradle Execution
         run: |
           echo "Setting up Android SDK..."
           export ANDROID_HOME=$HOME/android-sdk
@@ -29,8 +29,6 @@ jobs:
           # Download command line tools
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
           unzip -q cmdline-tools.zip
-          
-          # Correctly move extracted files to 'latest' directory
           mkdir -p $ANDROID_HOME/cmdline-tools/latest
           mv cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/
           rm cmdline-tools.zip
@@ -109,7 +107,7 @@ jobs:
                   android:label="AI App Factory"
                   android:theme="@style/Theme.AppCompat.Light">
                   <activity
-                      android:name=".MainActivity"
+                      name=".MainActivity"
                       android:exported="true">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
@@ -137,11 +135,13 @@ jobs:
           }
           EOF
 
-          # Build APK
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
-          gradle wrapper --gradle-version 8.1.1
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          # Download and use Gradle 8.1.1 directly to avoid system gradle version conflicts
+          wget -q https://services.gradle.org/distributions/gradle-8.1.1-bin.zip -O gradle-8.1.1.zip
+          unzip -q gradle-8.1.1.zip
+          export PATH=$PWD/gradle-8.1.1/bin:$PATH
+          
+          gradle --version
+          gradle assembleDebug --no-daemon
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
