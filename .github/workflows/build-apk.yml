@@ -20,12 +20,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
+      - name: Setup Android SDK (Auto Licenses)
         uses: android-actions/setup-android@v3
         with:
           accept-android-sdk-licenses: true
 
-      - name: Create Project and Build
+      - name: Generate Project Files & Build APK
         run: |
           mkdir -p app/src/main/java/com/example/aiappfactory
           mkdir -p app/src/main/res/values
@@ -120,8 +120,8 @@ jobs:
           }
           EOF
 
-          # Directly build using gradle command installed in runner
           gradle wrapper --gradle-version 8.1.1
+          chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK Artifact
