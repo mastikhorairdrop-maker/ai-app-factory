@@ -20,36 +20,16 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK & Accept Licenses
-        run: |
-          echo "Setting up professional Android SDK..."
-          export ANDROID_HOME=$HOME/android-sdk
-          mkdir -p $ANDROID_HOME
-          
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O commandlinetools.zip
-          mkdir -p $ANDROID_HOME/cmdline-tools/latest
-          unzip -q commandlinetools.zip
-          mv cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/
-          rm commandlinetools.zip
-          
-          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
-          
-          mkdir -p $ANDROID_HOME/licenses
-          echo "24333f8a63b6825ea3c5514f83c2829b004d1fee" > $ANDROID_HOME/licenses/android-sdk-license
-          echo "d56f5187479451eabf01fb78af6dfcb131a648b0" >> $ANDROID_HOME/licenses/android-sdk-license
-          echo "84831b8509b261f129a16b75f0f03102d1d07c40" >> $ANDROID_HOME/licenses/android-sdk-license
-          echo "84831b8509b261f129a16b75f0f03102d1d07c40" >> $ANDROID_HOME/licenses/android-sdk-preview-license
-          
-          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
-          sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          accept-android-sdk-licenses: true
 
-      - name: Generate Clean Android Project Structure
+      - name: Create Project and Build
         run: |
           mkdir -p app/src/main/java/com/example/aiappfactory
           mkdir -p app/src/main/res/values
 
-          # 1. settings.gradle (Using ALLOW mode to prevent repository conflicts)
           cat << 'EOF' > settings.gradle
           pluginManagement {
               repositories {
@@ -59,7 +39,7 @@ jobs:
               }
           }
           dependencyResolutionManagement {
-              repositoriesMode.set(RepositoriesMode.ALLOW)
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
               repositories {
                   google()
                   mavenCentral()
@@ -69,7 +49,6 @@ jobs:
           include ':app'
           EOF
 
-          # 2. Root build.gradle
           cat << 'EOF' > build.gradle
           buildscript {
               repositories {
@@ -77,19 +56,12 @@ jobs:
                   mavenCentral()
               }
               dependencies {
-                  classpath 'com.android.tools.build:gradle:7.4.2'
+                  classpath 'com.android.tools.build:gradle:8.1.1'
                   classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10'
-              }
-          }
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
               }
           }
           EOF
 
-          # 3. App build.gradle
           cat << 'EOF' > app/build.gradle
           apply plugin: 'com.android.application'
           apply plugin: 'kotlin-android'
@@ -105,12 +77,6 @@ jobs:
                   versionCode 1
                   versionName "1.0"
               }
-
-              buildTypes {
-                  release {
-                      minifyEnabled false
-                  }
-              }
           }
 
           dependencies {
@@ -120,13 +86,10 @@ jobs:
           }
           EOF
 
-          # 4. AndroidManifest.xml
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <application
-                  android:allowBackup="true"
                   android:label="AI App Factory"
-                  android:supportsRtl="true"
                   android:theme="@style/Theme.AppCompat.Light">
                   <activity
                       android:name=".MainActivity"
@@ -140,7 +103,6 @@ jobs:
           </manifest>
           EOF
 
-          # 5. MainActivity.kt
           cat << 'EOF' > app/src/main/java/com/example/aiappfactory/MainActivity.kt
           package com.example.aiappfactory
 
@@ -151,26 +113,18 @@ jobs:
           class MainActivity : AppCompatActivity() {
               override fun onCreate(savedInstanceState: Bundle?) {
                   super.onCreate(savedInstanceState)
-                  val textView = TextView(this)
-                  textView.text = "Welcome to AI App Factory!\nPhase 1 Successful!"
-                  textView.textSize = 22f
-                  textView.setPadding(60, 120, 60, 60)
-                  setContentView(textView)
+                  val tv = TextView(this)
+                  tv.text = "AI App Factory Successful!"
+                  setContentView(tv)
               }
           }
           EOF
 
-      - name: Build APK using Gradle 7.5
-        run: |
-          export ANDROID_HOME=$HOME/android-sdk
-          wget -q https://services.gradle.org/distributions/gradle-7.5-bin.zip -O gradle.zip
-          unzip -q gradle.zip
-          export PATH=$PWD/gradle-7.5/bin:$PATH
-          
-          gradle --version
-          gradle assembleDebug --no-daemon
+          # Directly build using gradle command installed in runner
+          gradle wrapper --gradle-version 8.1.1
+          ./gradlew assembleDebug --no-daemon
 
-      - name: Upload Master APK Artifact
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: AI-App-Factory-APK
