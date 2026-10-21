@@ -20,12 +20,15 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build Pure Gradle Project
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build APK Successfully
         run: |
-          echo "Starting clean build..."
-          
           mkdir -p app/src/main/java/com/example/aiappfactory
           mkdir -p app/src/main/res/values
+
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
 
           cat << 'EOF' > settings.gradle
           pluginManagement {
